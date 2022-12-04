@@ -21,6 +21,7 @@ use yii\web\IdentityInterface;
  * @property integer $status
  * @property integer $created_at
  * @property integer $updated_at
+ * @property integer $console_auth_token
  * @property string $password write-only password
  */
 class User extends ActiveRecord implements IdentityInterface
@@ -210,4 +211,33 @@ class User extends ActiveRecord implements IdentityInterface
     {
         $this->password_reset_token = null;
     }
+
+    public function generateConsoleAuthToken()
+    {
+        $this->console_auth_token = Yii::$app->security->generateRandomString() . '_' . time();
+    }
+
+    public static function findByConsoleAuthToken($token)
+    {
+        if (!static::isConsoleAuthTokenValid($token)) {
+            return null;
+        }
+
+        return static::findOne([
+            '$console_auth_token' => $token,
+            'status' => self::STATUS_ACTIVE,
+        ]);
+    }
+
+    public static function isConsoleAuthTokenValid($token)
+    {
+        if (empty($token)) {
+            return false;
+        }
+
+        $timeCreateToken = (int) substr($token, strrpos($token, '_') + 1);
+        $expire = Yii::$app->params['user.consoleAuthToken'];
+        return $timeCreateToken + $expire >= time();
+    }
+
 }
