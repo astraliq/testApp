@@ -2,6 +2,7 @@
 
 namespace frontend\controllers;
 
+use frontend\models\JsonForm;
 use frontend\models\ResendVerificationEmailForm;
 use frontend\models\VerifyEmailForm;
 use Yii;
@@ -15,6 +16,9 @@ use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
 use frontend\models\ContactForm;
+use yii\web\Response;
+use yii\web\UploadedFile;
+use yii\widgets\ActiveForm;
 
 /**
  * Site controller
@@ -146,6 +150,7 @@ class SiteController extends Controller
         return $this->render('about');
     }
 
+
     /**
      * Signs user up.
      *
@@ -255,5 +260,39 @@ class SiteController extends Controller
         return $this->render('resendVerificationEmail', [
             'model' => $model
         ]);
+    }
+
+    public function actionJson()
+    {
+        $model = new JsonForm();
+        if (\Yii::$app->request->isPost){
+            $model->load(\Yii::$app->request->post());
+            if (\Yii::$app->request->isAjax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+                return ActiveForm::validate($model);
+            }
+        }
+        return $this->render('saveJson', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionAddJson()
+    {
+        $model = new JsonForm();
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        if (\Yii::$app->request->isPost){
+            $jsonData = \Yii::$app->request->post()['json'];
+        }
+        if (\Yii::$app->request->isGet){
+            $jsonData = \Yii::$app->request->get()['json'];
+        }
+
+        $authToken = \Yii::$app->request->headers->get('authorizationToken');
+        $model->authToken = $authToken;
+        if ($model->validateToken('authToken', [])) {
+            return $jsonData;
+        }
+        return false;
     }
 }

@@ -224,7 +224,7 @@ class User extends ActiveRecord implements IdentityInterface
         }
 
         return static::findOne([
-            '$console_auth_token' => $token,
+            'console_auth_token' => $token,
             'status' => self::STATUS_ACTIVE,
         ]);
     }
@@ -234,7 +234,6 @@ class User extends ActiveRecord implements IdentityInterface
         if (empty($token)) {
             return false;
         }
-
         $timeCreateToken = (int) substr($token, strrpos($token, '_') + 1);
         $expire = Yii::$app->params['user.consoleAuthToken'];
         return $timeCreateToken + $expire >= time();
