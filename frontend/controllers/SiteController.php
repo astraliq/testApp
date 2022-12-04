@@ -2,6 +2,8 @@
 
 namespace frontend\controllers;
 
+use common\models\JsonData;
+use common\models\User;
 use frontend\models\JsonForm;
 use frontend\models\ResendVerificationEmailForm;
 use frontend\models\VerifyEmailForm;
@@ -279,20 +281,39 @@ class SiteController extends Controller
 
     public function actionAddJson()
     {
+        $start = $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true);
+        $memory = memory_get_usage();
+
         $model = new JsonForm();
         \Yii::$app->response->format = Response::FORMAT_JSON;
+        $jsonRequest = null;
         if (\Yii::$app->request->isPost){
-            $jsonData = \Yii::$app->request->post()['json'];
+            $jsonRequest = \Yii::$app->request->post()['json'];
         }
         if (\Yii::$app->request->isGet){
-            $jsonData = \Yii::$app->request->get()['json'];
+            $jsonRequest = \Yii::$app->request->get()['json'];
         }
 
         $authToken = \Yii::$app->request->headers->get('authorizationToken');
         $model->authToken = $authToken;
-        if ($model->validateToken('authToken', [])) {
-            return $jsonData;
+        $user = User::findByConsoleAuthToken($model->authToken);
+
+        if ($user && !is_null($jsonRequest)) {
+            $jsonData = new JsonData([
+                'user_id' => $user->id,
+                'data' => $jsonRequest,
+            ]);
+            $jsonData->save();
+
+            return [
+                'jsonId' => $jsonData->id,
+                'ScriptExecutionTime' => microtime(true) - $start,
+                'MemoryUsed' => memory_get_usage() - $memory,
+            ];
         }
-        return false;
+
+        return [
+            'error' => 'Token has been expired or invalid.',
+        ];
     }
 }
