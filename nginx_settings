@@ -1,0 +1,118 @@
+# FRONT SERVER SETTINGS
+server {
+        charset utf-8;
+        client_max_body_size 128M;
+
+        listen 80; ## listen for ipv4
+        #listen [::]:80 default_server ipv6only=on; ## listen for ipv6
+
+        server_name front.testapp;
+        root        /media/sf_Repos/testApp/frontend/web;
+        index       index.php;
+
+        access_log  /var/log/nginx/front-testapp_access.log;
+        error_log   /var/log/nginx/front-testapp_error.log;
+
+        keepalive_timeout 20;
+
+        #error_log /media/sf_Repos/testapp/log/nginx_log debug;
+
+  location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+  }
+
+  location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        include fastcgi_params;
+        fastcgi_read_timeout 6000;
+  }
+
+  # uncomment to avoid processing of calls to non-existing static files by Yii
+  #location ~ \.(js|css|png|jpg|gif|swf|ico|pdf|mov|fla|zip|rar)$ {
+        #try_files $uri =404;
+  #}
+  #error_page 404 /404.html;
+
+        # deny accessing php files for the /assets directory
+  location ~ ^/assets/.*\.php$ {
+        deny all;
+  }
+
+  location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass 127.0.0.1:9000;
+        #fastcgi_pass unix:/var/run/php5-fpm.sock;
+        try_files $uri =404;
+  }
+
+  location ~* /\. {
+        deny all;
+  }
+}
+
+#-----------------------------------------------------------------------
+# BACKEND SERVER SETTINGS
+
+server {
+        charset utf-8;
+        client_max_body_size 128M;
+
+        listen 80; ## listen for ipv4
+        #listen [::]:80 default_server ipv6only=on; ## listen for ipv6
+
+        server_name back.testapp;
+        root        /media/sf_Repos/testApp/backend/web;
+        index       index.php;
+
+        access_log  /var/log/nginx/back-testapp_access.log;
+        error_log   /var/log/nginx/back-testapp_error.log;
+
+        keepalive_timeout 20;
+
+        #error_log /media/sf_Repos/testapp/log/nginx_log debug;
+
+  location / {
+        #  rewrite /img/(.+)$ /img/$1 break;
+        #  rewrite /css/(.+)$ /css/$1 break;
+        #  rewrite /fonts/(.+)$ /fonts/$1 break;
+        #  rewrite /js/(.+).js$ /js/$1.js break;
+        #  rewrite ^/([a-z]+)$ /index.php?path=index/$1 last;
+        #  rewrite ^/([a-z]+)/(\w+)$ /index.php?path=index/$1&id=$2 last;
+        #  rewrite /confirmation.php$ /confirmation.php last;
+        #  rewrite /sendmailing.php$ /sendmailing.php last;
+        try_files $uri $uri/ /index.php$is_args$args;
+  }
+
+  location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        include fastcgi_params;
+        fastcgi_read_timeout 6000;
+  }
+
+  # uncomment to avoid processing of calls to non-existing static files by Yii
+  #location ~ \.(js|css|png|jpg|gif|swf|ico|pdf|mov|fla|zip|rar)$ {
+        #try_files $uri =404;
+  #}
+  #error_page 404 /404.html;
+
+  # deny accessing php files for the /assets directory
+  location ~ ^/assets/.*\.php$ {
+        deny all;
+  }
+
+  location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass 127.0.0.1:9000;
+        #fastcgi_pass unix:/var/run/php5-fpm.sock;
+        try_files $uri =404;
+  }
+
+  location ~* /\. {
+        deny all;
+  }
+}
+#-----------------------------------------------------------------------
